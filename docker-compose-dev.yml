@@ -1,0 +1,47 @@
+# docker-compose -f docker-compose-dev.yml up -d
+version: '3'
+services:
+
+  redis: # access with redis-commander
+    image: redis
+    container_name: redis
+    hostname: redis
+    #network_mode: "bridge"
+    restart: unless-stopped
+    ports:
+    - 0.0.0.0:6379:6379
+
+  # if it wont build: 'docker pull rediscommander/redis-commander'
+  redis-commander: # access at localhost:9002
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander
+    build: .
+    #network_mode: "bridge"
+    restart: unless-stopped
+    environment:
+    - REDIS_HOSTS=local:redis:6379
+    ports:
+    - "9002:8081"
+
+  portainer: # access at localhost:9000
+    container_name: portainer
+    image: portainer/portainer
+    #network_mode: "bridge"
+    restart: unless-stopped
+    command: -H unix:///var/run/docker.sock --no-auth
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      #- portainer_data:/data
+    ports:
+      - "9000:9000"
+
+  localstack:
+    container_name: localstack
+    image: localstack/localstack
+    #network_mode: "bridge"
+    restart: unless-stopped
+    environment:
+      SERVICES: "lambda,s3,sqs,sns,dynamodb"
+    ports:
+      - "4567:4567-4583:4583"
